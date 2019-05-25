@@ -1,0 +1,25 @@
+
+ Start  Stop   Length Name               Class
+
+ 00000H 001E5H 001E6H CODE               
+ 001F0H 0FBEFH 0FA00H DOUBLEBUF          
+ 0FBF0H 0FBF1H 00002H DATA               
+ 0FC00H 0FF27H 00328H IMAGES             
+ 0FF30H 1002FH 00100H STACK              
+
+Detailed map of segments
+
+0000:0000 01E6 C= S=CODE G=(none) M=MAIN.ASM ACBP=28
+001F:0000 FA00 C= S=DOUBLEBUF G=(none) M=MAIN.ASM ACBP=68
+0FBF:0000 0002 C= S=DATA G=(none) M=MAIN.ASM ACBP=68
+0FC0:0000 0328 C= S=IMAGES G=(none) M=MAIN.ASM ACBP=68
+0FF3:0000 0100 C= S=STACK G=(none) M=MAIN.ASM ACBP=74
+
+  Address         Publics by Name
+
+
+  Address         Publics by Value
+
+
+Program entry point at 0000:0000
+
