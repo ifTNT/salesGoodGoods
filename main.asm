@@ -39,13 +39,31 @@ start:
 ;    sub cl, 20
 ;    jnc .row
 
-jmp .move_left
+;jmp .move_left
+
+    mov di, level1
+    call drawMap
 
 .move_right:
     mov cx, 80
 .L1
+    
+    mov ax, maps
+    mov es, ax
+    mov ax, images
+    mov ds, ax
+    
     mov di, level1
-    call drawMap
+    push cx
+    mov cx, 71
+    call drawSingleTile
+    mov cx, 70
+    call drawSingleTile
+    mov cx, 69
+    call drawSingleTile
+    mov cx, 68
+    call drawSingleTile
+    pop cx
     
     setPos di, cx, 80
     mov ax, images
@@ -61,10 +79,21 @@ jmp .move_left
 .move_left:
     mov cx, 140
 .L2
+    mov ax, maps
+    mov es, ax
+    mov ax, images
+    mov ds, ax
+    
     mov di, level1
     push cx
     mov cx, 71
-    call drawSingleMap
+    call drawSingleTile
+    mov cx, 70
+    call drawSingleTile
+    mov cx, 69
+    call drawSingleTile
+    mov cx, 68
+    call drawSingleTile
     pop cx
 
     setPos di, cx, 80
@@ -98,75 +127,41 @@ jmp .move_left
 ;Return: None
 ;==============================
 drawMap:
-    push ax
-    push bx
     push cx
-    push ds
     push es
-    push di
-    push si
-
-    mov ax, maps
-    mov es, ax
-    
-    mov ax, images
-    mov ds, ax  ;Segment of bitmap
-    
-    add di, 16*10-1 ;Move to the end of map
-    mov bx, (200-20) ;End of graph rows
-
-.row:
-    mov cx, (320-20) ;End of graph cols
-.col:
-    mov ah, 00h
-    mov al, byte [es:di] ;Get tile id of current position
-    
-    ;Indirect searching offset of head of bitmap
-    mov si, tile_table
-    sal ax, 1
-    add si, ax
-    mov si, word [ds:si] ;si = ds:tile_table+ax*2
-
-    push di    
-    setPos di, cx, bl
-    call lib:printBitmap
-    pop di
-
-    dec di
-    sub cx, 20
-    jnc .col
-
-    sub bx, 20
-    jnc .row
-    
-    pop si
-    pop di
-    pop es
-    pop ds
-    pop cx
-    pop bx
-    pop ax
-    ret
-
-;=========================================
-;Action: Draw single pice of map
-;Parameters:
-;   di: target level
-;   cx: offset of tile (map coordinate)
-;=========================================
-drawSingleMap:
-    push ax
-    push cx
-    push dx
-    push di
-    push si
     push ds
-    push es
 
     mov ax, maps
     mov es, ax
     mov ax, images
     mov ds, ax
+    
+    mov cx, 16*10-1
+.L1:
+    call drawSingleTile
+    sub cx, 1
+    jnc .L1
+
+    pop ds
+    pop es
+    pop cx
+    ret
+
+;=========================================
+;Action: Draw single pice of map
+;Parameters:
+;   es: segment of map
+;   ds: segment of images
+;   di: target level
+;   cx: offset of tile (map coordinate)
+;=========================================
+drawSingleTile:
+    push ax
+    push cx
+    push dx
+    push di
+    push si
+
     add di, cx    
     mov ah, 00h
     mov al, byte [es:di] ;Get tile id of current position
@@ -193,8 +188,6 @@ drawSingleMap:
 
     call lib:printBitmap
 
-    pop es
-    pop ds
     pop si
     pop di
     pop dx
