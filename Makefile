@@ -18,7 +18,7 @@ run:
 
 %.obj:%.asm 
 	@echo [Assembling]
-	nasm -f obj -o $@ $^
+	nasm -f obj -Ilib/ -o $@ $^
 
 clean:
 	@echo Cleaning up...

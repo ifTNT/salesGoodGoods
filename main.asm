@@ -1,9 +1,9 @@
 bits 16
 
+%include "mod13h_mac.asm"
+
 segment code
     jmp start
-    %include "mode13h.asm"
-
 start:
     ;Set stack
     mov ax, stack
@@ -13,6 +13,9 @@ start:
     enterVideoMode
     setDoubleBufMode
     clearScreen
+
+    call lib:midiInit
+    call lib:midiPlayBgm
 
 ;draw_bg:
 ;    mov cx, 180
@@ -27,7 +30,7 @@ start:
 ;    mov ax, images
 ;    mov ds, ax  ;Segment of bitmap
 ;    mov si, spacer ;Head offset of bitmap
-;    call printBitmap
+;    call lib:printBitmap
 ;
 ;    sub cx, 20
 ;    jnc .col
@@ -36,19 +39,52 @@ start:
 ;    sub cl, 20
 ;    jnc .row
 
+jmp .move_left
+
+.move_right:
+    mov cx, 80
+.L1
     mov di, level1
-    call draw_map
+    call drawMap
     
-    setPos di, 120, 80
+    setPos di, cx, 80
     mov ax, images
     mov ds, ax  ;Segment of bitmap
     mov si, box_empty ;Head offset of bitmap
-    call printBitmap
+    call lib:printBitmap
 
-    call flushBuffer
+    call lib:flushBuffer
+
+    add cx, 2
+    cmp cx, 140
+    jbe .L1
+.move_left:
+    mov cx, 140
+.L2
+    mov di, level1
+    push cx
+    mov cx, 71
+    call drawSingleMap
+    pop cx
+
+    setPos di, cx, 80
+    mov ax, images
+    mov ds, ax  ;Segment of bitmap
+    mov si, box_empty ;Head offset of bitmap
+    call lib:printBitmap
+
+    call lib:flushBuffer
+
+    sub cx, 2
+    cmp cx, 80
+    jae .L2
+    jmp .move_right
 
     mov ah, 00h;
     int 16h
+
+    call lib:midiStop
+    call lib:midiHalt
 
     enterTextMode
 
@@ -61,7 +97,7 @@ start:
 ;Parameters: di: target level
 ;Return: None
 ;==============================
-draw_map:
+drawMap:
     push ax
     push bx
     push cx
@@ -86,16 +122,14 @@ draw_map:
     mov al, byte [es:di] ;Get tile id of current position
     
     ;Indirect searching offset of head of bitmap
-    push di
-    mov di, tile_table
+    mov si, tile_table
     sal ax, 1
-    add di, ax
-    mov si, word [ds:di]
-    pop di
+    add si, ax
+    mov si, word [ds:si] ;si = ds:tile_table+ax*2
 
     push di    
     setPos di, cx, bl
-    call printBitmap
+    call lib:printBitmap
     pop di
 
     dec di
@@ -114,14 +148,73 @@ draw_map:
     pop ax
     ret
 
+;=========================================
+;Action: Draw single pice of map
+;Parameters:
+;   di: target level
+;   cx: offset of tile (map coordinate)
+;=========================================
+drawSingleMap:
+    push ax
+    push cx
+    push dx
+    push di
+    push si
+    push ds
+    push es
+
+    mov ax, maps
+    mov es, ax
+    mov ax, images
+    mov ds, ax
+    add di, cx    
+    mov ah, 00h
+    mov al, byte [es:di] ;Get tile id of current position
+    
+    ;Indirect searching offset of head of bitmap
+    mov si, tile_table
+    sal ax, 1
+    add si, ax
+    mov si, word [ds:si] ;si = ds:tile_table+ax*2
+
+    mov dx, cx
+    and dx, 000FH;
+    mov dh, dl
+    shl dl, 2
+    add dl, dh
+    mov dh, 0
+    shl dx, 2 ;dx = cx%16*20 (x-coordinate)
+
+    mov di, cx
+    shr di, 4
+    imul di, 6400 ;di = (cx/16)*20*320 (y-coordinate)
+
+    add di, dx ;combine x and y coordinate
+
+    call lib:printBitmap
+
+    pop es
+    pop ds
+    pop si
+    pop di
+    pop dx
+    pop cx
+    pop ax
+    ret
+
+
+%include "mode13h.asm"
+%include "midi.asm"
+
+
 segment maps align=16
 level1:
     db 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
     db 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
     db 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0
     db 0, 0, 0, 0, 1, 2, 1, 1, 1, 1, 2, 1, 0, 0, 0, 0
-    db 0, 0, 0, 0, 1, 1, 1, 1, 2, 1, 1, 1, 0, 0, 0, 0
-    db 0, 0, 0, 0, 1, 1, 1, 2, 1, 1, 1, 1, 0, 0, 0, 0
+    db 0, 0, 0, 0, 1, 1, 1, 3, 2, 1, 1, 1, 0, 0, 0, 0
+    db 0, 0, 0, 0, 1, 1, 1, 2, 4, 1, 1, 1, 0, 0, 0, 0
     db 0, 0, 0, 0, 1, 2, 1, 1, 1, 1, 2, 1, 0, 0, 0, 0
     db 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0
     db 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
@@ -139,12 +232,14 @@ level1:
 %endmacro
 segment images align=16
 tile_table:
-    dw void, spacer, barrier
+    dw void, spacer, barrier, banana, watermelon
 ;-----------------------------
     tile box_empty
     tile spacer
     tile void
     tile barrier
+    tile banana
+    tile watermelon
 
 segment stack stack align=16
     resb 256
