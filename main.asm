@@ -17,44 +17,20 @@ start:
     call lib:midiInit
     call lib:midiPlayBgm
 
-;draw_bg:
-;    mov cx, 180
-;.row:
-;    push cx
-;    mov cx, 300
-;.col:
-;    pop bx
-;    push bx
-;    setPos di, cx, bl
-;
-;    mov ax, images
-;    mov ds, ax  ;Segment of bitmap
-;    mov si, spacer ;Head offset of bitmap
-;    call lib:printBitmap
-;
-;    sub cx, 20
-;    jnc .col
-;
-;    pop cx
-;    sub cl, 20
-;    jnc .row
-
-;jmp .move_left
-
     mov di, level1
     call drawMap
 
-.move_right:
-    mov cx, 80
-.L1
-    
     mov ax, maps
     mov es, ax
     mov ax, images
     mov ds, ax
     
-    mov di, level1
+moveRight:
+    mov cx, 80 ;Starting point of left
+    mov bx, 1 ;Speed when moving right
+.L1:
     push cx
+    mov di, level1
     mov cx, 71
     call drawSingleTile
     mov cx, 70
@@ -68,46 +44,27 @@ start:
     setPos di, cx, 80
     mov ax, images
     mov ds, ax  ;Segment of bitmap
-    mov si, box_empty ;Head offset of bitmap
+    test bx, bx
+    js .bear_2
+    mov si, bear_1 ;Head offset of bitmap
+    jmp .next
+.bear_2:
+    mov si, bear_2
+.next:
     call lib:printBitmap
-
     call lib:flushBuffer
 
-    add cx, 2
-    cmp cx, 140
-    jbe .L1
-.move_left:
-    mov cx, 140
-.L2
-    mov ax, maps
-    mov es, ax
-    mov ax, images
-    mov ds, ax
-    
-    mov di, level1
-    push cx
-    mov cx, 71
-    call drawSingleTile
-    mov cx, 70
-    call drawSingleTile
-    mov cx, 69
-    call drawSingleTile
-    mov cx, 68
-    call drawSingleTile
-    pop cx
-
-    setPos di, cx, 80
-    mov ax, images
-    mov ds, ax  ;Segment of bitmap
-    mov si, box_empty ;Head offset of bitmap
-    call lib:printBitmap
-
-    call lib:flushBuffer
-
-    sub cx, 2
-    cmp cx, 80
-    jae .L2
-    jmp .move_right
+    add cx, bx ;Update position with velocity
+    test bx, bx
+    js .isMoveLeft ;If direction is negitive
+    cmp cx, 140 ;Right most boundary
+    jbe .L1 ;If not touch boundary, loop
+    mov cx, 140 ;Start point of right
+    mov bx, -1 ;Speed when moving left
+.isMoveLeft:
+    cmp cx, 80 ;Left most boundary
+    jae .L1 ;If not touch boundary, loop
+    jmp moveRight ;Start again
 
     mov ah, 00h;
     int 16h
@@ -206,8 +163,8 @@ level1:
     db 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
     db 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0
     db 0, 0, 0, 0, 1, 2, 1, 1, 1, 1, 2, 1, 0, 0, 0, 0
-    db 0, 0, 0, 0, 1, 1, 1, 3, 2, 1, 1, 1, 0, 0, 0, 0
-    db 0, 0, 0, 0, 1, 1, 1, 2, 4, 1, 1, 1, 0, 0, 0, 0
+    db 0, 0, 0, 0, 1, 1, 1, 3, 2, 5, 1, 1, 0, 0, 0, 0
+    db 0, 0, 0, 0, 1, 1, 1, 2, 4, 6, 1, 1, 0, 0, 0, 0
     db 0, 0, 0, 0, 1, 2, 1, 1, 1, 1, 2, 1, 0, 0, 0, 0
     db 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0
     db 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
@@ -225,7 +182,9 @@ level1:
 %endmacro
 segment images align=16
 tile_table:
-    dw void, spacer, barrier, banana, watermelon
+    dw void, spacer, barrier
+    dw banana, watermelon
+    dw banana_box, watermelon_box
 ;-----------------------------
     tile box_empty
     tile spacer
@@ -233,6 +192,10 @@ tile_table:
     tile barrier
     tile banana
     tile watermelon
+    tile banana_box
+    tile watermelon_box
+    tile bear_1
+    tile bear_2
 
 segment stack stack align=16
     resb 256
