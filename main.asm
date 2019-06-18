@@ -18,13 +18,44 @@ start:
     call lib:midiPlayBgm
 
 startup:
-    %include "startup.asm"
+    ;%include "startup.asm"
 
     cmp ax, 0FFFFh
     je end
 
+startGame:
+    
+    ;---Begin level initialize---
+    ;Draw initial map
     mov di, level1
     call drawMap
+
+    ;Read map info
+    mov ax, maps
+    mov ds, ax
+    mov si, level1_info
+    mov ax, InGameData
+    mov es, ax
+    ;Copy inital main character position
+    mov ax, word [ds:si]
+    mov word [es:mainCharPos], ax
+    ;Copy box counter
+    add si, 2 ;Offset of box counter
+    mov ax, word [ds:si]
+    mov word [es:cntBox], ax
+    ;Copy inital box position
+    add si, 2 ;Offset of box pos
+    mov cx, ax
+    mov di, boxPos
+    rep movsw 
+
+    ;---End level initalize---
+
+    call drawMainChar
+    call drawBoxes
+    call lib:flushBuffer
+
+    jmp end_pause
 
     mov ax, maps
     mov es, ax
@@ -72,6 +103,7 @@ moveRight:
     jae .L1 ;If not touch boundary, loop
     jmp moveRight ;Start again
 
+end_pause:
     mov ah, 00h;
     int 16h
 
@@ -85,6 +117,71 @@ end:
     ;Return to dos
     mov ah, 4ch
     int 21h
+
+;=======================================================
+;Action: Draw main character accroding to in game date
+;=======================================================
+drawMainChar:
+    ;Save register will use
+    push ax
+    push bx
+    push cx
+    push di
+    push si
+    push ds
+    push es
+    
+    mov ax, InGameData
+    mov ds, ax
+    mov bx, [ds:mainCharPos]
+    movzx cx, bl ;X-pos
+
+    ;Draw images
+    mov ax, images
+    mov ds, ax
+    mov si, bear_1
+    setPos di, cx, bh
+    call lib:printBitmap
+    
+    ;Restore registers
+    pop es
+    pop ds
+    pop si
+    pop di
+    pop cx
+    pop bx
+    pop ax
+    ret
+
+;==============================================
+;Action: Draw boxed accroding to in game data
+;==============================================
+drawBoxes:
+    
+    mov ax, InGameData
+    mov ds, ax
+    mov cx, [ds:cntBox]
+.drawBox:
+    ;Read individual box position
+    mov si, cx
+    dec si
+    shl si, 1
+    add si, boxPos
+    mov bx, [ds:si]
+    movzx dx, bl ;X-pos
+    
+    ;Draw box
+    setPos di, dx, bh
+    mov ax, images
+    push ds
+    mov ds, ax
+    mov si, box_empty
+    call lib:printBitmap
+    pop ds
+
+    loop .drawBox
+
+    ret
 
 ;==============================
 ;Action: Draw the sepcific map
@@ -177,6 +274,13 @@ delay:
 %include "mode13h.asm"
 %include "midi.asm"
 
+segment InGameData align=16
+mainCharPos:
+    resb 2
+cntBox:
+    resw 1
+boxPos:
+    resb 320
 
 segment maps align=16
 level1:
@@ -190,6 +294,12 @@ level1:
     db 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0
     db 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
     db 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+
+level1_info:
+    db 160, 100  ;Initial main char pos(screen coordinate)
+    dw 2         ;Count of following box
+    db 140, 80   ;Position of box0(screen coordinate)
+    db 120, 90  ;Position of box1(screen coordinate)
 
 %macro tile 1
 %1:
