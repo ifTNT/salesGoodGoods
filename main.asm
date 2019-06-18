@@ -17,6 +17,12 @@ start:
     call lib:midiInit
     call lib:midiPlayBgm
 
+startup:
+    %include "startup.asm"
+
+    cmp ax, 0FFFFh
+    je end
+
     mov di, level1
     call drawMap
 
@@ -68,6 +74,8 @@ moveRight:
 
     mov ah, 00h;
     int 16h
+
+end:
 
     call lib:midiStop
     call lib:midiHalt
