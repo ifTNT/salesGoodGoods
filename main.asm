@@ -160,6 +160,19 @@ drawSingleTile:
     pop ax
     ret
 
+;=======================
+;Action: Delay a while
+;Parameter: cx
+;=======================
+delay:
+.l1:
+    push cx
+    mov cx, 0
+.l2:
+    loop .l2
+    pop cx
+    loop .l1
+    ret
 
 %include "mode13h.asm"
 %include "midi.asm"

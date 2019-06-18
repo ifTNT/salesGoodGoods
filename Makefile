@@ -10,7 +10,7 @@ run:
 %.exe:%.obj
 	dosbox -c "mount C $(shell pwd)" \
 			-c "C:" \
-			-c "TLINK /s $(subst /,\\,$^), $(subst /,\\,$@) > __LINKER.TXT" \
+			-c "TLINK /3 /s $(subst /,\\,$^), $(subst /,\\,$@) > __LINKER.TXT" \
 			-c "exit" > /dev/null
 	@echo [Linking]
 	@cat __LINKER.TXT
