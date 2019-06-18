@@ -31,11 +31,13 @@ startGame:
     call drawMap
 
     ;Read map info
-    mov ax, maps
-    mov ds, ax
-    mov si, level1_info
     mov ax, InGameData
     mov es, ax
+    mov word [es:currentLevelPtr], level1
+    mov ax, maps
+    mov ds, ax
+    mov si, word [es:currentLevelPtr]
+    add si, 16*10 ;Offset of map info
     ;Copy inital main character position
     mov ax, word [ds:si]
     mov word [es:mainCharPos], ax
@@ -51,11 +53,86 @@ startGame:
 
     ;---End level initalize---
 
+.gameLoop:
+    mov di, level1
+    call drawMap
     call drawMainChar
     call drawBoxes
     call lib:flushBuffer
 
-    jmp end_pause
+    mov ah, 01h
+    int 16h
+    jz .gameLoop
+
+    ;Key judge
+    mov ah, 00h
+    int 16h
+
+    cmp al, 'w'
+    je .w
+    cmp al, 'a'
+    je .a
+    cmp al, 's'
+    je .s
+    cmp al, 'd'
+    je .d
+    jmp .endKeyJudge
+
+.w:
+    mov ax, InGameData
+    mov es, ax
+    mov ax, word [es:mainCharPos]
+    mov word [es:lastCharPos], ax
+    dec ah ;Y-pos -= 1
+    mov word [es:mainCharPos], ax
+    jmp .charPosJudge
+.a:
+    mov ax, InGameData
+    mov es, ax
+    mov ax, word [es:mainCharPos]
+    mov word [es:lastCharPos], ax
+    dec al ;X-pos -= 1
+    mov word [es:mainCharPos], ax
+    jmp .charPosJudge
+.s:
+    mov ax, InGameData
+    mov es, ax
+    mov ax, word [es:mainCharPos]
+    mov word [es:lastCharPos], ax
+    inc ah ;Y-pos += 1
+    mov word [es:mainCharPos], ax
+    jmp .charPosJudge
+.d:
+    mov ax, InGameData
+    mov es, ax
+    mov ax, word [es:mainCharPos]
+    mov word [es:lastCharPos], ax
+    inc al ;X-pos += 1
+    mov word [es:mainCharPos], ax
+.charPosJudge:
+    ;mov ax, maps
+    ;mov ds, ax
+    ;mov si, word [es:currentLevelPtr]
+    ;mov ax, word [es:mainCharPos]
+    ;movzx bx, ah
+    ;mov ah, 0
+    ;shl bx, 4
+    ;add ax, bx ;ax = Ypos*16+Xpos
+    ;add si, ax
+    ;mov al, byte [ds:si]
+    ;cmp al, 1
+    ;je .endKeyJudge
+    ;if is illigle move
+    mov ax, word [es:mainCharPos]
+    call isLeagle
+    cmp ax, 0
+    je .endKeyJudge
+    mov ax, word [es:lastCharPos] ;Restore last position
+    mov word [es:mainCharPos], ax
+.endKeyJudge:
+    
+
+    jmp .gameLoop
 
     mov ax, maps
     mov es, ax
@@ -118,6 +195,70 @@ end:
     mov ah, 4ch
     int 21h
 
+;======================================
+;Action: Judge whether is leagle move
+;Parameter: ax: {Ypos, Xpos}
+;Return: ax==0: leagle move
+;        ax==1: illeagle move
+;======================================
+isLeagle:
+    ;Save registers
+    push bx
+    push cx
+    push si
+    push es
+    push ds
+
+    push ax
+    mov ax, InGameData
+    mov es, ax
+    mov ax, maps
+    mov ds, ax
+    
+    ;Judge block
+    mov si, word [es:currentLevelPtr]
+    pop ax
+    push ax
+    movzx bx, ah
+    mov ah, 0
+    shl bx, 4
+    add ax, bx ;ax = Ypos*16+Xpos
+    add si, ax
+    mov al, byte [ds:si]
+    cmp al, 1
+    pop ax
+    jne .illeagle
+
+    ;Judge empty block
+    mov cx, word [es:cntBox]
+.l1:
+    mov si, cx
+    dec si
+    shl si, 1
+    add si, boxPos
+    mov bx, [es:si]
+    cmp bx, ax
+    je .illeagle
+    loop .l1
+
+    ;je .illeagle
+
+    ;Leagle move
+    mov ax, 0
+    jmp .return
+
+.illeagle:
+    mov ax, 1
+.return:
+    ;Restore registers
+    pop ds
+    pop es
+    pop si
+    pop cx
+    pop bx
+    ret
+
+
 ;=======================================================
 ;Action: Draw main character accroding to in game date
 ;=======================================================
@@ -135,12 +276,17 @@ drawMainChar:
     mov ds, ax
     mov bx, [ds:mainCharPos]
     movzx cx, bl ;X-pos
+    mov bl, bh
+    mov bh, 0
+
+    imul cx, 20
+    imul bx, 20
 
     ;Draw images
     mov ax, images
     mov ds, ax
     mov si, bear_1
-    setPos di, cx, bh
+    setPos di, cx, bl
     call lib:printBitmap
     
     ;Restore registers
@@ -154,10 +300,19 @@ drawMainChar:
     ret
 
 ;==============================================
-;Action: Draw boxed accroding to in game data
+;Action: Draw boxes accroding to in game data
 ;==============================================
 drawBoxes:
-    
+    ;Save register will use
+    push ax
+    push bx
+    push cx
+    push dx
+    push di
+    push si
+    push ds
+    push es
+
     mov ax, InGameData
     mov ds, ax
     mov cx, [ds:cntBox]
@@ -169,9 +324,14 @@ drawBoxes:
     add si, boxPos
     mov bx, [ds:si]
     movzx dx, bl ;X-pos
+    mov bl, bh
+    mov bh, 0
+
+    imul dx, 20
+    imul bx, 20
     
     ;Draw box
-    setPos di, dx, bh
+    setPos di, dx, bl
     mov ax, images
     push ds
     mov ds, ax
@@ -180,7 +340,22 @@ drawBoxes:
     pop ds
 
     loop .drawBox
+    
+    ;Restore registers
+    pop es
+    pop ds
+    pop si
+    pop di
+    pop dx
+    pop cx
+    pop bx
+    pop ax
 
+    ret
+;============================================================
+;Action: Copy 4 adjacency neiborhood tile from current level
+;============================================================
+clearAdj:
     ret
 
 ;==============================
@@ -275,6 +450,10 @@ delay:
 %include "midi.asm"
 
 segment InGameData align=16
+currentLevelPtr:
+    resw 1 ;Pointer of current level(in map segment)
+lastCharPos:
+    resb 2
 mainCharPos:
     resb 2
 cntBox:
@@ -294,12 +473,11 @@ level1:
     db 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0
     db 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
     db 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-
-level1_info:
-    db 160, 100  ;Initial main char pos(screen coordinate)
-    dw 2         ;Count of following box
-    db 140, 80   ;Position of box0(screen coordinate)
-    db 120, 90  ;Position of box1(screen coordinate)
+.info:
+    db 8, 5  ;Initial main char pos(map coordinate)
+    dw 2     ;Count of following box
+    db 7, 4  ;Position of box0(map coordinate)
+    db 6, 4  ;Position of box1(map coordinate)
 
 %macro tile 1
 %1:
