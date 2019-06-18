@@ -39,19 +39,19 @@ level0:
 level1:
     db 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
     db 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-    db 0, 0, 0, 0, 0, 3, 4, 1, 1, 1, 1, 0, 0, 0, 0, 0
-    db 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 2, 1, 0, 0, 0, 0
-    db 0, 0, 0, 0, 1, 1, 1, 3, 2, 1, 1, 1, 0, 0, 0, 0
-    db 0, 0, 0, 0, 1, 1, 1, 2, 4, 1, 1, 1, 0, 0, 0, 0
-    db 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 2, 1, 0, 0, 0, 0
+    db 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0
+    db 0, 0, 0, 0, 0, 1, 1, 2, 1, 2, 1, 0, 0, 0, 0, 0
+    db 0, 0, 0, 0, 0, 1, 1, 1, 3, 1, 1, 0, 0, 0, 0, 0
+    db 0, 0, 0, 0, 0, 1, 1, 4, 1, 1, 1, 0, 0, 0, 0, 0
+    db 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0
     db 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0
     db 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
     db 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 .info:
-    db 6, 5  ;Initial main char pos(map coordinate)
+    db 8, 5  ;Initial main char pos(map coordinate)
     dw 2     ;Count of following box
-    db 5, 4  ;Position of box0(map coordinate)
-    db 6, 4  ;Position of box1(map coordinate)
+    db 9, 5  ;Position of box0(map coordinate)
+    db 9, 6  ;Position of box1(map coordinate)
 
 level2:
     db 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0

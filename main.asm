@@ -23,16 +23,22 @@ startup:
     cmp ax, 0FFFFh
     je end
 
+    mov ax, InGameData
+    mov es, ax
+    mov word [es:currentLevel], 1
 startGame:
     
     ;---Begin level initialize---
     ;Read map info
     mov ax, InGameData
     mov es, ax
-    mov word [es:currentLevelPtr], level0
+    mov ax, word [es:currentLevel]
+    mov si, ax
     mov ax, maps
     mov ds, ax
-    mov si, word [es:currentLevelPtr]
+    shl si, 1
+    mov si, word [ds:levels+si] ;Indirect looking for level pointer
+    mov word [es:currentLevelPtr], si
     add si, 16*10 ;Offset of map info
     ;Copy inital main character position
     mov ax, word [ds:si]
@@ -63,9 +69,17 @@ startGame:
     call drawPlaced
     call lib:flushBuffer
 
+    ;Pass detect
+    mov ax, InGameData
+    mov ds, ax
+    mov ax, [ds:cntBox]
+    mov bx, [ds:cntPlaced]
+    cmp ax, bx
+    je .nextLevel
+
     mov ah, 01h
     int 16h
-    ;jz .gameLoop
+    jz .gameLoop
 
     ;Key judge
     mov ah, 00h
@@ -198,6 +212,14 @@ startGame:
 .endKeyJudge:
     
     jmp .gameLoop
+
+.nextLevel:
+    mov ax, InGameData
+    mov es, ax
+    mov ax, word [es:currentLevel]
+    inc ax
+    mov word [es:currentLevel], ax
+    jmp startGame
 
 end_pause:
     mov ah, 00h;
