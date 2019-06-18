@@ -86,7 +86,7 @@ segment code align=16
     call lib:flushBuffer
 
     mov cx, 40 ;Delay a while
-    ;call delay
+    call delay
     
     setPos di, 0, 0
     mov ax, manual_img
@@ -96,7 +96,7 @@ segment code align=16
     call lib:flushBuffer
     
     mov cx, 160 ;Delay a while
-    ;call delay
+    call delay
 
 .return:
     mov ax, bx

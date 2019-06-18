@@ -18,14 +18,14 @@ start:
     call lib:midiPlayBgm
 
 startup:
-    ;%include "startup.asm"
+    %include "startup.asm"
 
     cmp ax, 0FFFFh
     je end
 
     mov ax, InGameData
     mov es, ax
-    mov word [es:currentLevel], 4
+    mov word [es:currentLevel], 1
 startGame:
     
     ;---Begin level initialize---
@@ -55,10 +55,6 @@ startGame:
 
     ;Initial placed box
     mov word[es:cntPlaced], 0
-    ;mov word[es:placedBox], 0505h
-    ;mov word[es:placedBox+2], 5
-    ;mov word[es:placedBox+4], 0605h
-    ;mov word[es:placedBox+6], 6
 
     ;---End level initalize---
 
@@ -77,6 +73,16 @@ startGame:
     cmp ax, bx
     je .nextLevel
 
+    ;Get system clock counter (result stored at cx:dx)
+	mov ah, 0
+	int 1ah
+
+	;If system clock exceed duration, replay music
+	cmp dx, bgm_duration	
+    jna .getKey
+	call lib:midiPlayBgm
+
+.getKey:
     mov ah, 01h
     int 16h
     jz .gameLoop

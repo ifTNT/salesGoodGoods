@@ -69,7 +69,7 @@ segment midi align=16
     current_time: dw 0
 	bgm:
         incbin "media/music/Rag_time_on_the_rag.mid"
-    bgm_duration: dw 2575
+    bgm_duration EQU 2575
 
 
 
