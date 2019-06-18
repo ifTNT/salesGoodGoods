@@ -79,56 +79,49 @@ startGame:
     jmp .endKeyJudge
 
 .w:
-    mov ax, InGameData
-    mov es, ax
-    mov ax, word [es:mainCharPos]
-    mov word [es:lastCharPos], ax
-    dec ah ;Y-pos -= 1
-    mov word [es:mainCharPos], ax
+    mov bh, -1
+    mov bl, 0
     jmp .charPosJudge
 .a:
-    mov ax, InGameData
-    mov es, ax
-    mov ax, word [es:mainCharPos]
-    mov word [es:lastCharPos], ax
-    dec al ;X-pos -= 1
-    mov word [es:mainCharPos], ax
+    mov bh, 0
+    mov bl, -1
     jmp .charPosJudge
 .s:
-    mov ax, InGameData
-    mov es, ax
-    mov ax, word [es:mainCharPos]
-    mov word [es:lastCharPos], ax
-    inc ah ;Y-pos += 1
-    mov word [es:mainCharPos], ax
+    mov bh, 1
+    mov bl, 0
     jmp .charPosJudge
 .d:
+    mov bh, 0
+    mov bl, 1
+.charPosJudge:
     mov ax, InGameData
     mov es, ax
     mov ax, word [es:mainCharPos]
-    mov word [es:lastCharPos], ax
-    inc al ;X-pos += 1
+    mov word [es:lastCharPos], ax ;Backup old position
+    add al, bl ;Update position
+    add ah, bh
     mov word [es:mainCharPos], ax
-.charPosJudge:
-    ;mov ax, maps
-    ;mov ds, ax
-    ;mov si, word [es:currentLevelPtr]
-    ;mov ax, word [es:mainCharPos]
-    ;movzx bx, ah
-    ;mov ah, 0
-    ;shl bx, 4
-    ;add ax, bx ;ax = Ypos*16+Xpos
-    ;add si, ax
-    ;mov al, byte [ds:si]
-    ;cmp al, 1
-    ;je .endKeyJudge
-    ;if is illigle move
-    mov ax, word [es:mainCharPos]
+    push ax
     call isLeagle
     cmp ax, 0
     je .endKeyJudge
-    mov ax, word [es:lastCharPos] ;Restore last position
-    mov word [es:mainCharPos], ax
+
+    ;Restore last position
+    push word [es:lastCharPos]
+    pop word [es:mainCharPos]
+    cmp ax, 2
+    jne .endKeyJudge
+
+    ;Move box
+    pop ax
+    add al, bl
+    add ah, bh
+    mov di, cx
+    dec di
+    shl di, 1
+    add di, boxPos
+    mov word [es:di], ax
+
 .endKeyJudge:
     
 
@@ -199,12 +192,13 @@ end:
 ;Action: Judge whether is leagle move
 ;Parameter: ax: {Ypos, Xpos}
 ;Return: ax==0: leagle move
-;        ax==1: illeagle move
+;        ax==1: Touch bokc
+;        ax==2: Touch empty box
+;        cx = box id
 ;======================================
 isLeagle:
     ;Save registers
     push bx
-    push cx
     push si
     push es
     push ds
@@ -238,7 +232,7 @@ isLeagle:
     add si, boxPos
     mov bx, [es:si]
     cmp bx, ax
-    je .illeagle
+    je .touchBox
     loop .l1
 
     ;je .illeagle
@@ -249,12 +243,14 @@ isLeagle:
 
 .illeagle:
     mov ax, 1
+    jmp .return
+.touchBox
+    mov ax, 2
 .return:
     ;Restore registers
     pop ds
     pop es
     pop si
-    pop cx
     pop bx
     ret
 
@@ -466,17 +462,17 @@ level1:
     db 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
     db 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
     db 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0
-    db 0, 0, 0, 0, 1, 2, 1, 1, 1, 1, 2, 1, 0, 0, 0, 0
+    db 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 2, 1, 0, 0, 0, 0
     db 0, 0, 0, 0, 1, 1, 1, 3, 2, 5, 1, 1, 0, 0, 0, 0
     db 0, 0, 0, 0, 1, 1, 1, 2, 4, 6, 1, 1, 0, 0, 0, 0
-    db 0, 0, 0, 0, 1, 2, 1, 1, 1, 1, 2, 1, 0, 0, 0, 0
+    db 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 2, 1, 0, 0, 0, 0
     db 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0
     db 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
     db 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 .info:
-    db 8, 5  ;Initial main char pos(map coordinate)
+    db 8, 6  ;Initial main char pos(map coordinate)
     dw 2     ;Count of following box
-    db 7, 4  ;Position of box0(map coordinate)
+    db 5, 4  ;Position of box0(map coordinate)
     db 6, 4  ;Position of box1(map coordinate)
 
 %macro tile 1
