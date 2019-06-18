@@ -55,57 +55,56 @@ level1:
 
 level2:
     db 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-    db 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-    db 0, 0, 0, 0, 0, 3, 4, 1, 1, 1, 1, 0, 0, 0, 0, 0
-    db 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 2, 1, 0, 0, 0, 0
-    db 0, 0, 0, 0, 1, 1, 1, 3, 2, 1, 1, 1, 0, 0, 0, 0
-    db 0, 0, 0, 0, 1, 1, 1, 2, 4, 1, 1, 1, 0, 0, 0, 0
-    db 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 2, 1, 0, 0, 0, 0
     db 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0
-    db 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+    db 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0
+    db 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0
+    db 0, 0, 0, 1, 1, 2, 1, 1, 1, 2, 2, 1, 1, 0, 0, 0
+    db 0, 0, 0, 1, 1, 1, 1, 2, 1, 1, 3, 1, 1, 0, 0, 0
+    db 0, 0, 0, 1, 1, 1, 1, 4, 1, 1, 1, 1, 1, 0, 0, 0
+    db 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 0, 0, 0
+    db 0, 0, 0, 0, 0, 1, 2, 1, 1, 1, 1, 0, 0, 0, 0, 0
     db 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 .info:
-    db 6, 5  ;Initial main char pos(map coordinate)
+    db 5, 8  ;Initial main char pos(map coordinate)
     dw 2     ;Count of following box
-    db 5, 4  ;Position of box0(map coordinate)
-    db 6, 4  ;Position of box1(map coordinate)
+    db 7, 3  ;Position of box0(map coordinate)
+    db 4, 5  ;Position of box1(map coordinate)
 
 level3:
     db 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-    db 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-    db 0, 0, 0, 0, 0, 3, 4, 1, 1, 1, 1, 0, 0, 0, 0, 0
+    db 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0
     db 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 2, 1, 0, 0, 0, 0
-    db 0, 0, 0, 0, 1, 1, 1, 3, 2, 1, 1, 1, 0, 0, 0, 0
-    db 0, 0, 0, 0, 1, 1, 1, 2, 4, 1, 1, 1, 0, 0, 0, 0
+    db 0, 0, 0, 0, 1, 1, 2, 1, 1, 1, 1, 1, 0, 0, 0, 0
+    db 0, 0, 0, 0, 1, 1, 1, 1, 1, 2, 1, 1, 0, 0, 0, 0
     db 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 2, 1, 0, 0, 0, 0
-    db 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0
-    db 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+    db 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 3, 1, 0, 0, 0, 0
+    db 0, 0, 0, 0, 1, 1, 1, 2, 1, 1, 2, 1, 0, 0, 0, 0
+    db 0, 0, 0, 0, 1, 1, 2, 2, 1, 1, 4, 3, 0, 0, 0, 0
     db 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 .info:
-    db 6, 5  ;Initial main char pos(map coordinate)
-    dw 2     ;Count of following box
-    db 5, 4  ;Position of box0(map coordinate)
-    db 6, 4  ;Position of box1(map coordinate)
+    db 8, 4   ;Initial main char pos(map coordinate)
+    dw 3      ;Count of following box
+    db 9, 2   ;Position of box0(map coordinate)
+    db 10, 3  ;Position of box1(map coordinate)
+    db 6, 6   ;Position of box2(map coordinate)
 
 level4:
     db 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-    db 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-    db 0, 0, 0, 0, 0, 3, 4, 1, 1, 1, 1, 0, 0, 0, 0, 0
-    db 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 2, 1, 0, 0, 0, 0
-    db 0, 0, 0, 0, 1, 1, 1, 3, 2, 1, 1, 1, 0, 0, 0, 0
-    db 0, 0, 0, 0, 1, 1, 1, 2, 4, 1, 1, 1, 0, 0, 0, 0
-    db 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 2, 1, 0, 0, 0, 0
-    db 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0
+    db 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0
+    db 0, 0, 0, 0, 1, 1, 2, 1, 1, 1, 1, 1, 0, 0, 0, 0
+    db 0, 0, 0, 0, 1, 3, 1, 1, 1, 2, 1, 1, 0, 0, 0, 0
+    db 0, 0, 0, 0, 1, 1, 1, 4, 1, 1, 1, 1, 0, 0, 0, 0
+    db 0, 0, 0, 0, 1, 1, 3, 1, 1, 1, 1, 1, 0, 0, 0, 0
+    db 0, 0, 0, 0, 1, 1, 1, 1, 2, 1, 1, 1, 0, 0, 0, 0
+    db 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0
     db 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
     db 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 .info:
-    db 6, 5  ;Initial main char pos(map coordinate)
-    dw 2     ;Count of following box
-    db 5, 4  ;Position of box0(map coordinate)
+    db 8, 4  ;Initial main char pos(map coordinate)
+    dw 3     ;Count of following box
+    db 8, 2  ;Position of box0(map coordinate)
     db 6, 4  ;Position of box1(map coordinate)
-
-
-
+    db 9, 6  ;Position of box2(map coordinate)
 
 %macro tile 1
 %1:
@@ -133,6 +132,11 @@ tile_table:
     tile watermelon_box
     tile bear_1
     tile bear_2
+
+segment ending_img align=16
+ed:
+    dw 320, 200
+    incbin "media/img/ending.bin"
 
 segment stack stack align=16
     resb 256

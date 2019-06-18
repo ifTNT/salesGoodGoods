@@ -25,7 +25,7 @@ startup:
 
     mov ax, InGameData
     mov es, ax
-    mov word [es:currentLevel], 1
+    mov word [es:currentLevel], 4
 startGame:
     
     ;---Begin level initialize---
@@ -219,7 +219,16 @@ startGame:
     mov ax, word [es:currentLevel]
     inc ax
     mov word [es:currentLevel], ax
-    jmp startGame
+    cmp ax, 5
+    jb startGame
+
+happyEnding:
+    mov ax, ending_img
+    mov ds, ax
+    mov si, ed
+    mov di, 0
+    call lib:printBitmap
+    call lib:flushBuffer
 
 end_pause:
     mov ah, 00h;
