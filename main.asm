@@ -29,7 +29,7 @@ startGame:
     ;Read map info
     mov ax, InGameData
     mov es, ax
-    mov word [es:currentLevelPtr], level1
+    mov word [es:currentLevelPtr], level0
     mov ax, maps
     mov ds, ax
     mov si, word [es:currentLevelPtr]
@@ -198,52 +198,6 @@ startGame:
 .endKeyJudge:
     
     jmp .gameLoop
-
-    mov ax, maps
-    mov es, ax
-    mov ax, images
-    mov ds, ax
-    
-moveRight:
-    mov cx, 80 ;Starting point of left
-    mov bx, 1 ;Speed when moving right
-.L1:
-    push cx
-    mov di, level1
-    mov cx, 71
-    call drawSingleTile
-    mov cx, 70
-    call drawSingleTile
-    mov cx, 69
-    call drawSingleTile
-    mov cx, 68
-    call drawSingleTile
-    pop cx
-    
-    setPos di, cx, 80
-    mov ax, images
-    mov ds, ax  ;Segment of bitmap
-    test bx, bx
-    js .bear_2
-    mov si, bear_1 ;Head offset of bitmap
-    jmp .next
-.bear_2:
-    mov si, bear_2
-.next:
-    call lib:printBitmap
-    call lib:flushBuffer
-
-    add cx, bx ;Update position with velocity
-    test bx, bx
-    js .isMoveLeft ;If direction is negitive
-    cmp cx, 140 ;Right most boundary
-    jbe .L1 ;If not touch boundary, loop
-    mov cx, 140 ;Start point of right
-    mov bx, -1 ;Speed when moving left
-.isMoveLeft:
-    cmp cx, 80 ;Left most boundary
-    jae .L1 ;If not touch boundary, loop
-    jmp moveRight ;Start again
 
 end_pause:
     mov ah, 00h;
@@ -611,68 +565,4 @@ delay:
 
 %include "mode13h.asm"
 %include "midi.asm"
-
-segment InGameData align=16
-currentLevelPtr:
-    resw 1 ;Pointer of current level(in map segment)
-lastCharPos:
-    resb 2
-mainCharPos:
-    resb 2
-cntBox:
-    resw 1
-boxPos:
-    resb 320
-cntPlaced:
-    resw 1
-placedBox:
-    resb 320
-
-segment maps align=16
-level1:
-    db 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-    db 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-    db 0, 0, 0, 0, 0, 3, 4, 1, 1, 1, 1, 0, 0, 0, 0, 0
-    db 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 2, 1, 0, 0, 0, 0
-    db 0, 0, 0, 0, 1, 1, 1, 3, 2, 1, 1, 1, 0, 0, 0, 0
-    db 0, 0, 0, 0, 1, 1, 1, 2, 4, 1, 1, 1, 0, 0, 0, 0
-    db 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 2, 1, 0, 0, 0, 0
-    db 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0
-    db 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-    db 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-.info:
-    db 6, 5  ;Initial main char pos(map coordinate)
-    dw 2     ;Count of following box
-    db 5, 4  ;Position of box0(map coordinate)
-    db 6, 4  ;Position of box1(map coordinate)
-
-%macro tile 1
-%1:
-    dw 20, 20 ;Width, Height
-    %defstr fileName %1
-    %strcat path "media/img/tile/", fileName, ".bin"
-    incbin path
-    %undef path
-    %undef fileName
-
-%endmacro
-segment images align=16
-tile_table:
-    dw void, spacer, barrier
-    dw banana, watermelon
-    dw banana_box, watermelon_box
-;-----------------------------
-    tile box_empty
-    tile spacer
-    tile void
-    tile barrier
-    tile banana
-    tile watermelon
-    tile banana_box
-    tile watermelon_box
-    tile bear_1
-    tile bear_2
-
-segment stack stack align=16
-    resb 256
-    stack_top:
+%include "data.asm"
