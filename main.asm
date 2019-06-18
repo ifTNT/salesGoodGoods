@@ -26,10 +26,6 @@ startup:
 startGame:
     
     ;---Begin level initialize---
-    ;Draw initial map
-    mov di, level1
-    call drawMap
-
     ;Read map info
     mov ax, InGameData
     mov es, ax
@@ -51,18 +47,25 @@ startGame:
     mov di, boxPos
     rep movsw 
 
+    ;Initial placed box
+    mov word[es:cntPlaced], 0
+    ;mov word[es:placedBox], 0505h
+    ;mov word[es:placedBox+2], 5
+    ;mov word[es:placedBox+4], 0605h
+    ;mov word[es:placedBox+6], 6
+
     ;---End level initalize---
 
 .gameLoop:
-    mov di, level1
     call drawMap
     call drawMainChar
     call drawBoxes
+    call drawPlaced
     call lib:flushBuffer
 
     mov ah, 01h
     int 16h
-    jz .gameLoop
+    ;jz .gameLoop
 
     ;Key judge
     mov ah, 00h
@@ -76,6 +79,8 @@ startGame:
     je .s
     cmp al, 'd'
     je .d
+    cmp al, 'r'
+    je .reset
     jmp .endKeyJudge
 
 .w:
@@ -93,6 +98,9 @@ startGame:
 .d:
     mov bh, 0
     mov bl, 1
+    jmp .charPosJudge
+.reset:
+    jmp startGame
 .charPosJudge:
     mov ax, InGameData
     mov es, ax
@@ -114,17 +122,81 @@ startGame:
 
     ;Move box
     pop ax
-    add al, bl
-    add ah, bh
     mov di, cx
     dec di
     shl di, 1
     add di, boxPos
+    mov cx, 2;
+    push ax
+.infinity_box:
+    pop ax
+    add al, bl
+    add ah, bh
+    push ax
+    
+    call isLeagle
+    cmp ax, 2
+    je .endInfinityBox
+    cmp ax, 1
+    je .boxHitBlock
+    pop ax
+    push ax
+    
     mov word [es:di], ax
+    call drawMap
+    call drawMainChar
+    call drawBoxes
+    call drawPlaced
+    call lib:flushBuffer
+
+    jmp .infinity_box
+
+.boxHitBlock:
+    pop ax
+    push ax
+    call blockAt
+    cmp al, 3
+    je .banana
+    cmp al, 4
+    je .watermelon
+    jmp .endInfinityBox
+
+.banana:
+    ;Place 5 into placed
+    mov ax, InGameData
+    mov ds, ax
+    pop ax
+    mov bx, word [ds:cntPlaced] ;Get last index
+    mov word [es:di], ax ;Put box into block
+    push bx
+    shl bx, 2
+    mov word [ds:bx+placedBox], ax  ;Position of new placed box
+    mov word [ds:bx+placedBox+2], 5 ;ID of new placed box
+    pop bx
+    inc bx ;Move to next position
+    mov word [ds:cntPlaced], bx ;Put next position
+    jmp .endKeyJudge 
+.watermelon:
+    ;Place 6 into placed 
+    mov ax, InGameData
+    mov ds, ax
+    pop ax
+    mov bx, word [ds:cntPlaced] ;Get last index
+    push bx
+    shl bx, 2
+    mov word [es:di], ax ;Put box into block
+    mov word [ds:bx+placedBox], ax  ;Position of new placed box
+    mov word [ds:bx+placedBox+2], 6 ;ID of new placed box
+    pop bx
+    inc bx ;Move to next position
+    mov word [ds:cntPlaced], bx ;Put next position
+    jmp .endKeyJudge
+
+.endInfinityBox:
+    pop ax
 
 .endKeyJudge:
     
-
     jmp .gameLoop
 
     mov ax, maps
@@ -188,6 +260,107 @@ end:
     mov ah, 4ch
     int 21h
 
+;====================================================
+;Action: Draw placed box accroding to in game data
+;====================================================
+drawPlaced:
+    ;Save register will use
+    push ax
+    push bx
+    push cx
+    push dx
+    push di
+    push si
+    push ds
+    push es
+
+    mov ax, InGameData
+    mov ds, ax
+    mov cx, [ds:cntPlaced]
+    cmp cx, 0
+    je .return
+.drawBox:
+    push cx
+    ;Read individual box position
+    mov si, cx
+    dec si
+    shl si, 2
+    add si, placedBox
+    mov bx, [ds:si]
+    movzx dx, bl ;X-pos
+    mov bl, bh
+    mov bh, 0
+
+    imul dx, 20
+    imul bx, 20
+    
+    ;Draw box
+    setPos di, dx, bl
+    add si, 2
+    mov dx, word [ds:si] ;Box ID
+
+    mov ax, images
+    push ds
+    mov ds, ax
+    
+    ;Indirect searching offset of head of bitmap
+    mov si, tile_table
+    sal dx, 1
+    add si, dx
+    mov si, word [ds:si] ;si = ds:tile_table+ax*2
+    
+    call lib:printBitmap
+    pop ds
+
+    pop cx
+    loop .drawBox
+
+.return:
+    ;Restore registers
+    pop es
+    pop ds
+    pop si
+    pop di
+    pop dx
+    pop cx
+    pop bx
+    pop ax
+
+    ret
+
+;========================================================
+;Action: Get block at current level at spcific position
+;Parameter: ax: Position{Ypos, Xpos}
+;Return: al: Block ID
+;========================================================
+blockAt:
+    push bx
+    push si
+    push ds
+    push es
+
+    push ax
+    mov ax, InGameData
+    mov es, ax
+    mov ax, maps
+    mov ds, ax
+    pop ax
+    
+    mov si, word [es:currentLevelPtr]
+    movzx bx, ah
+    mov ah, 0
+    shl bx, 4
+    add ax, bx ;ax = Ypos*16+Xpos
+    add si, ax
+    mov al, byte [ds:si]
+    
+    pop es
+    pop ds
+    pop si
+    pop bx
+    ret
+
+
 ;======================================
 ;Action: Judge whether is leagle move
 ;Parameter: ax: {Ypos, Xpos}
@@ -208,22 +381,9 @@ isLeagle:
     mov es, ax
     mov ax, maps
     mov ds, ax
+    pop ax
     
-    ;Judge block
-    mov si, word [es:currentLevelPtr]
-    pop ax
-    push ax
-    movzx bx, ah
-    mov ah, 0
-    shl bx, 4
-    add ax, bx ;ax = Ypos*16+Xpos
-    add si, ax
-    mov al, byte [ds:si]
-    cmp al, 1
-    pop ax
-    jne .illeagle
-
-    ;Judge empty block
+    ;Judge empty box
     mov cx, word [es:cntBox]
 .l1:
     mov si, cx
@@ -235,7 +395,10 @@ isLeagle:
     je .touchBox
     loop .l1
 
-    ;je .illeagle
+    ;Judge block
+    call blockAt
+    cmp al, 1
+    jne .illeagle
 
     ;Leagle move
     mov ax, 0
@@ -354,16 +517,19 @@ drawBoxes:
 clearAdj:
     ret
 
-;==============================
-;Action: Draw the sepcific map
-;Parameters: di: target level
+;================================================
+;Action: Draw the map accroding to in game data
 ;Return: None
-;==============================
+;================================================
 drawMap:
     push cx
+    push di
     push es
     push ds
 
+    mov ax, InGameData
+    mov ds, ax
+    mov di, word [ds:currentLevelPtr]
     mov ax, maps
     mov es, ax
     mov ax, images
@@ -377,6 +543,7 @@ drawMap:
 
     pop ds
     pop es
+    pop di
     pop cx
     ret
 
@@ -456,21 +623,25 @@ cntBox:
     resw 1
 boxPos:
     resb 320
+cntPlaced:
+    resw 1
+placedBox:
+    resb 320
 
 segment maps align=16
 level1:
     db 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
     db 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-    db 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0
+    db 0, 0, 0, 0, 0, 3, 4, 1, 1, 1, 1, 0, 0, 0, 0, 0
     db 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 2, 1, 0, 0, 0, 0
-    db 0, 0, 0, 0, 1, 1, 1, 3, 2, 5, 1, 1, 0, 0, 0, 0
-    db 0, 0, 0, 0, 1, 1, 1, 2, 4, 6, 1, 1, 0, 0, 0, 0
+    db 0, 0, 0, 0, 1, 1, 1, 3, 2, 1, 1, 1, 0, 0, 0, 0
+    db 0, 0, 0, 0, 1, 1, 1, 2, 4, 1, 1, 1, 0, 0, 0, 0
     db 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 2, 1, 0, 0, 0, 0
     db 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0
     db 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
     db 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 .info:
-    db 8, 6  ;Initial main char pos(map coordinate)
+    db 6, 5  ;Initial main char pos(map coordinate)
     dw 2     ;Count of following box
     db 5, 4  ;Position of box0(map coordinate)
     db 6, 4  ;Position of box1(map coordinate)
