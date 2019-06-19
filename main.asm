@@ -25,7 +25,7 @@ startup:
 
     mov ax, InGameData
     mov es, ax
-    mov word [es:currentLevel], 1
+    mov word [es:currentLevel], 4
 startGame:
     
     ;---Begin level initialize---

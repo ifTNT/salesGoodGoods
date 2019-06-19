@@ -4,17 +4,17 @@ currentLevel:
 currentLevelPtr:
     resw 1 ;Pointer of current level(in map segment)
 lastCharPos:
-    resb 2
+    resb 2 ;Last position
 mainCharPos:
-    resb 2
+    resb 2 ;Main character position
 cntBox:
-    resw 1
+    resw 1 ;How many box is available
 boxPos:
-    resb 320
+    resb 320 ;Boxes position
 cntPlaced:
-    resw 1
+    resw 1 ;How many box is in place
 placedBox:
-    resb 320
+    resb 320 ;Placed boxes
 
 segment maps align=16
 levels:
